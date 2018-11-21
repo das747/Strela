@@ -35,8 +35,8 @@ void loop(){
   unsigned long timer=millis();
   GyroUpdate();
   int b=X;
-  for(int i=0;i<4;i++){
-    runMotor(i,constrain(sp*cos(PI*(angle-M[i])/180),-255,255));
+  for(int i = 0; i<4; i++){
+    runMotor(i, constrain(sp * cos(PI * (angle - M[i]) / 180), -255, 255));
   }
   Serial.println(X);
   delay(timeStep-(millis()-timer));
@@ -57,23 +57,23 @@ void runMotor(int num, int speed){
   switch (num) {
     case 0:
         M1.setSpeed(abs(speed));
-        if (speed == 0)M1.run(RELEASE); //絘
+        if (speed == 0) M1.run(RELEASE); //絘
         else {
-          if (speed < 0)M1.run(BACKWARD);
+          if (speed < 0) M1.run(BACKWARD);
           else M1.run(FORWARD);
         }
     case 1:       
         M2.setSpeed(abs(speed));
-        if (speed == 0)M2.run(RELEASE); //絘
+        if (speed == 0) M2.run(RELEASE); //絘
         else {
-          if (speed < 0)M2.run(BACKWARD);
+          if (speed < 0) M2.run(BACKWARD);
           else M2.run(FORWARD);
         }
     case 2:
         M3.setSpeed(abs(speed));
-        if (speed == 0)M3.run(RELEASE); //絘
+        if (speed == 0) M3.run(RELEASE); //絘
         else {
-          if (speed < 0)M3.run(BACKWARD);
+          if (speed < 0) M3.run(BACKWARD);
           else M3.run(FORWARD);
         }
     case 3:
