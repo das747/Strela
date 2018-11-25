@@ -1,17 +1,21 @@
 int in1 = 29;
 int in2 = 31; 
 int en = 12;
-bool i = 0;
 void setup() {
   for(int i=29; i < 43; i+=2){
     pinMode(i, OUTPUT);
   }
-
+  Serial.begin(9600);
 }
 void loop() {
-run_motor(1, 100 * (1 - i * 2));
-i = !i;
-delay(1000);
+  for(int i = 0; i < 256; i++){
+    run_motor(0, i); 
+    delay(25);
+  }
+  for(int i = 256; i > 0; i--){
+    run_motor(0, i); 
+    delay(25);
+  }
 }
 
 void run_motor(int n, int sp){

@@ -1,50 +1,24 @@
-
 #include <HTInfraredSeeker.h>
-#include <AFMotor.h>
 
 #define FIRST_US_PIN 27
 #define FIRST_BUTTON_PIN 26
+#define FIRST_MOTOR_IN 29
 
 
-
-
-
-
-AF_DCMotor M1(4);                                     //создание объектов мотор
-AF_DCMotor M2(2);
-AF_DCMotor M3(3);
 bool error[] = {0,0,0}, state[] = {0,0,0}; //для кнопок предыидущее значение и текущее состояние
 int sp = 100, Xer = 2, dist = 100;                             //скорость, допуск гироскопа, ограничение для вратаря 
 const int Seeker[] = {0 , 6, 5, 4, 2, 0, 0, 8, 7, 6};
 const int IRer[] = {0, 2, 3,  3, 4, 5,  6, 8, 4,  7, 7, 8,  8, 9, 10, 12}; //преобразует зону мячика в направление движения
 const int IRm[] = {8, 9, 10, 0, 2, 3, 4};
-const int A[] = {  2,  1,  0, -1, -2, -2, -2, -1,  0,  1,  2,  2, 0}; // массивы для движения
-const int B[] = { -2, -2, -2, -1,  0,  1,  2,  2,  2,  1,  0, -1, 0};
-const int C[] = {  0,  1,  2,  2,  2,  1,  0, -1, -2, -2, -2, -1, 0};
 long X;                                    //для гироскопа
-
-
-
-
-
-
-
 
 //=======================================================_____SETUP_____=========================================================
 void setup() {
   Serial.begin(9600);
   Serial1.begin(9600); //связь с наной
   Serial.println("setup");
-  M1.setSpeed(sp);    //включаем моторы
-  M1.run(RELEASE);
-  M2.setSpeed(sp);
-  M2.run(RELEASE);
-  M3.setSpeed(sp);
-  M3.run(RELEASE);
-  pinMode(29,OUTPUT);//передний датчик - 1; эхо=35
-  pinMode(25,OUTPUT);//правый датчик - 0; эхо=33
-  pinMode(31,OUTPUT);//левый датчик - 2; эхо=37
-  InfraredSeeker::Initialize(); //инициализация леговского датчика
+ 
+  //InfraredSeeker::Initialize(); //инициализация леговского датчика
 }
 
 
@@ -117,52 +91,17 @@ void loop() {
 
 
 
-
-
-
-
-
-
-
-
-
-/*if(digitalRead(31)==1) GO = 1;   //пока не нажата кнопка не включать двичение
-    int Zone=IRer[IRz()];
-    if(GO){
-    int US2=getUS(2);
-    int US3=getUS(3);
-    //if(((US2<50) or (US2<50))and((US2+US3)>165)) sp=70; //если на одном из датчиков <50 и сумма датчиков >165, то едем медленнее
-    //else sp=100;
-    if((Zone==0)and(getUS(1)<10)) { //если мяч перед роботом, то
-      Serial.println("ball");
-      if(!(abs(US2-US3)>=40)){   //если робот смещён вбок то выравниваемся
-        if(US2>US3) Zone=10;
-        else Zone=2;
-      }
-    }
-    GoToZone(Zone); //если мяч не у робота или мяч у робота и смещения нет, то едем на мяч
-    Serial.println(Zone);
-    }*/
-
-
-
-
-
-
-
-
-
 //==========================================_____FUNCTIONS_____===============================================
   
 
-bool GoToZone(int zone) {             //едет в указанную зону                                                                      ПЕРЕДЕЛАТЬ
+bool GoToZone(int zone) {             //едет в указанную зону                                                                      ОК
   int b;
   GyroUpdate();
   b = (X > Xer or X < (-Xer)) * X * X * X / 200;
   //b = X * 1 * (X > Xer or X < (-Xer));
-  M1r(constrain((sp * A[zone] + b), -255, 255));
-  M2r(constrain((sp * B[zone] + b), -255, 255));
-  M3r(constrain((sp * C[zone] + b), -255, 255));
+  for(int i = 0; i<4; i++){
+    runMotor(i, constrain(sp * cos(PI * (angle - M[i]) / 180), -255, 255));
+  }
   Serial.print("\tMoving to ");
   Serial.print(zone);
   Serial.print("(");
@@ -171,36 +110,15 @@ bool GoToZone(int zone) {             //едет в указанную зону 
   return true;
 }
 
-bool M1r(int b) {               //УПРОЩЁННОЕ УПРАВЛЕНИЕ МОТОРАМИ: ОТРИЦАТЕЛЬНАЯ МОЩНОСТЬ - НАЗАД, 0 - СТОП
-  M1.setSpeed(abs(b));
-  if (b == 0) M1.run(RELEASE); //絘
-  else {
-    if (b < 0) M1.run(BACKWARD);
-    else M1.run(FORWARD);
-  }
-  return true;
-}
-bool M2r(int b) {               //УПРОЩЁННОЕ УПРАВЛЕНИЕ МОТОРАМИ: ОТРИЦАТЕЛЬНАЯ МОЩНОСТЬ - НАЗАД, 0 - СТОП
-  M2.setSpeed(abs(b));
-  if (b == 0) M2.run(RELEASE); //絘
-  else {
-    if (b < 0) M2.run(BACKWARD);
-    else M2.run(FORWARD);
-  }
-  return true;
+void runMotor(int n, int sp){
+  bool dir = sp < 0;
+  digitalWrite(in1 + n * 4 + 2 * (n > 1), !dir and sp != 0);
+  digitalWrite(in2 + n * 4 - 2 * (n > 1), dir and sp != 0);
+  analogWrite(en - n, abs(sp));
 }
 
-bool M3r(int b) {               //УПРОЩЁННОЕ УПРАВЛЕНИЕ МОТОРАМИ: ОТРИЦАТЕЛЬНАЯ МОЩНОСТЬ - НАЗАД, 0 - СТОП
-  M3.setSpeed(abs(b));
-  if (b == 0) M3.run(RELEASE); //絘
-  else {
-    if (b < 0) M3.run(BACKWARD);
-    else M3.run(FORWARD);
-  }
-  return true;
-}
 
-bool GyroUpdate() //обновление значения гироскопа
+bool GyroUupdate() //обновление значения гироскопа
 {
   Serial1.write(1);
   while (!Serial1.available()) {
