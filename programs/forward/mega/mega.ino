@@ -4,7 +4,7 @@
 #define FIRST_BUTTON_PIN 48
 #define FIRST_MOTOR_IN 29
 #define FIRST_ENABLE_PIN 12
-
+#define FIRST_LINE_SENSOR A3
 
 bool error[] = {0,0,0}, state[] = {0,0,0}; //для кнопок предыидущее значение и текущее состояние
 const int sp_ref = 200, X_er = 2;                             //основная скорость, допуск гироскопа
@@ -23,17 +23,19 @@ void setup() {
     for(int i=12; i >=9; i--){
     pinMode(i, OUTPUT);
   }
-}
+  pinMode(47, OUTPUT);
+  pinMode(53, OUTPUT);
+} 
+
 
 
 void loop() {
   Serial.println("loop");
   CheckButtons();
-  int dir, right, left, sp;
+  int dir, right, left, sp = sp_ref;
   //==========================================_____DEBUG_____===============================================
   if(state[2]){ //дебаг
     Serial.println("DEBUG");
-    GyroUpdate();
     GoToZone(0, 0);
     dir = IRz();
     sp = sp_ref * (dir == 747);
@@ -62,9 +64,8 @@ void loop() {
   
   //==========================================_____START_____===============================================
   if(state[1]){   //рабочий режим: первая кнопка - нападающий; вторая кнопка - вратарь
-    if(state[0]) Serial.println("FORWARD");
-    else Serial.println("GOALKEEPER");
-    dir  = IRz;
+    Serial.println("FORWARD");
+    dir = IRz();
     sp = sp_ref * (dir == 747);
     right = getUS(1);
     left = getUS(0);
@@ -108,10 +109,13 @@ void loop() {
 
 bool GoToZone(int angle, int m_sp) {             //едет в указанную зону                                                                      ОК
   GyroUpdate();
+  //long g_er = long(((X - 10) * (X - 10) * (X - 10) + 1000) * 0,005 * (abs(X) > X_er));
+  //int g_er = 3 * X *;
   int g_er = (X > X_er or X < (-X_er)) * X * X * X / 200;
-  //g_er = X * 1 * (X > Xer or X < (-Xer));
-  for(int i = 0; i<4; i++){
-    runMotor(i, constrain(m_sp * cos(PI * (angle - M[i]) / 180) + g_er, -255, 255));
+  //int g_er = X * 1 * (X > Xer or X < (-Xer));
+  //int g_er = int(sqrt(abs(X)) * 15) * (1 - (2 * (X < 0))) * (abs(X) > X_er);
+  for(int i = 0; i < 4; i++){
+    runMotor(i, constrain(m_sp * cos(PI * (angle - M[i]) / 180) + g_er * (1 - 2 * (i > 1)), -255, 255));
   }
   Serial.print("\tMoving to ");
   Serial.print(angle);
@@ -164,9 +168,15 @@ int IRz() {               //определение зоны                     
       max_val = val;
     }
   }
-  int angle = (180 - max_sens * 24) * bool(max_sens) + 747 * !bool(max_sens);
   Serial.print("\tIRzone:");
+  Serial.print(max_sens);
+  Serial.print('(');
+  int angle = (max_sens * 24) * bool(max_val) + 747 * !bool(max_val);
   Serial.print(angle);
+  Serial.print("-->");
+  angle += bool(angle) * 48 * (1 - (2 * int(max_sens / 8)));
+  Serial.print(angle);
+  Serial.print(')');
   return angle;
 }
 
