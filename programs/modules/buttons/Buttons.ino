@@ -1,4 +1,4 @@
-#define FIRST_BUTTON 26
+#define FIRST_BUTTON 48
 
 bool error[]={0,0,0};
 bool state[]={0,0,0};
@@ -24,11 +24,10 @@ for(int i=0;i<3;i++){
   } 
 }
 
-
-Serial.print(START);
-Serial.print("\t");
-Serial.print(DEBUG);
-Serial.print("\t");
-Serial.println(AAA);
+  for(int i=0; i < 3; i++){
+    Serial.print(state[i]);
+    Serial.print('\t');
+  }
+  Serial.println();
 
 }
