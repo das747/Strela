@@ -8,11 +8,11 @@ void setup() {
 void loop() {
   int IR[15];
   for(int i = 0; i < 15; i++){
-    IR[i]=pulseIn((IRpin[i]),LOW,2000);
+    IR[i]=pulseIn((IRpins[i]),LOW,2000);
   }  
   for(int i = 0; i < 15; i++){
     Serial.print("  D");
-    Serial.print(IRpin[i]);
+    Serial.print(IRpins[i]);
     Serial.print(":");
     Serial.print(IR[i]);
   }

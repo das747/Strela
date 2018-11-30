@@ -1,7 +1,7 @@
-#define FIRST_US_PIN 27
+#define FIRST_US_PIN 4
 void setup() {
   Serial.begin(9600);
-  pinMode(29,OUTPUT);//передний датчик - 1; эхо=35
+  pinMode(FIRST_US_PIN,OUTPUT);//передний датчик - 1; эхо=35
   pinMode(25,OUTPUT);//правый датчик - 0; эхо=33
   pinMode(31,OUTPUT);//левый датчик - 2; эхо=37
   
@@ -14,9 +14,8 @@ Serial.println(getUS(0));
 
 int getUS(int US){
   int value;
-  int trig = FIRST_US_PIN+US*2;
-  int echo = trig+6;
-  if(trig==27) trig=25;
+  int trig = FIRST_US_PIN + US * 6;
+  int echo = FIRST_US_PIN - 2 + US * 2;
   digitalWrite(trig, LOW); //НАЧАЛО ПОЛУЧЕНИЯ ДАННЫХ С US ДАТЧИКА
   delayMicroseconds(5);
   digitalWrite(trig, HIGH); 

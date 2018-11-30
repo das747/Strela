@@ -1,4 +1,5 @@
 #include <L3G4200D.h>
+#define MODEL 1
 
 L3G4200D gyro;              //создание гироскопа
 
@@ -21,9 +22,13 @@ void loop(){
   X += norm.ZAxis * timeStep / 1000 * a;
   //digitalWrite(8,(X<0)); 
   if(Serial.available()){
-    Serial.read();
-    Serial.write(constrain(int(X), -127, 127));     // передача в диапазоне (-128/128)
-    //Serial.write(constrain(int(abs(X)),0,255));    резерв с диапазоном (-256/256)
+    int com = Serial.read();
+    if(com){
+      Serial.write(constrain(int(X), -127, 127));     // передача в диапазоне (-128/128)
+      //Serial.write(constrain(int(abs(X)),0,255));резерв с диапазоном (-256/256)
+    }else{
+      Serial.write(MODEL);
+    }
   }
   delay(timeStep - (millis() - timer));
   

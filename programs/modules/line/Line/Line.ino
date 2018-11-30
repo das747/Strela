@@ -1,15 +1,15 @@
- #define FIRST_LINE_SENSOR 36
+ #define FIRST_LINE_SENSOR A3
 
 void setup() {
 Serial.begin(9600);
 }
 
 void loop() {
-for(int i=0;i<5;i++){
+for(int i=0;i<4;i++){
   Serial.print("\tD");
-  Serial.print(i*2+FIRST_LINE_SENSOR);
+  Serial.print(i+FIRST_LINE_SENSOR);
   Serial.print(":");
-  Serial.print(digitalRead(FIRST_LINE_SENSOR+i*2));
+  Serial.print(analogRead(FIRST_LINE_SENSOR+i));
 
 }
 

@@ -7,17 +7,17 @@
 #define FIRST_LINE_SENSOR A3
 
 bool error[] = {0,0,0}, state[] = {0,0,0}; //для кнопок предыидущее значение и текущее состояние
-const int sp_ref = 200, X_er = 2, line_ref = 400;                             //основная скорость, допуск гироскопа
+const int sp_ref = 200, X_er = 2;                             //основная скорость, допуск гироскопа
 const int IRpins[] = {38, 36, 34,  32, 30, 28,  26, 24, 46,  44, 42, 23,  25, 27, 40};
 const int M[] = {325, 35, 35, 325};
-int model = 0, kicker = 3, echo_f = 2, trig_f = 4;
+int model = 1, kicker = 3, echo_f = 2, trig_f = 4;
 long X;                                    //для гироскопа
 
 //=======================================================_____SETUP_____=========================================================
 void setup() {
   Serial.begin(9600);
   Serial1.begin(9600); //связь с наной
-  delay(1000);
+  delay(300);
   Serial.println("setup");
   for(int i=29; i <= 43; i+=2){
     pinMode(i, OUTPUT);
@@ -25,14 +25,18 @@ void setup() {
     for(int i=12; i >=9; i--){
     pinMode(i, OUTPUT);
   }
-  pinMode(47, OUTPUT);
-  pinMode(53, OUTPUT);
+  pinMode(47, OUTPUT);   //trig0
+  pinMode(53, OUTPUT);   //trig1
   Serial1.write(0);
-  while(!Serial1.available()) {}
-  model = Serial1.read();
+  //while(!Serial1.available()) {}
+  //model = Serial1.read();
   kicker += model;
   echo_f += model;
   trig_f -= 2 * model;
+  Serial.println(model);
+  Serial.println(kicker);
+  Serial.println(echo_f);
+  Serial.print(trig_f);
   pinMode(kicker, OUTPUT);
   digitalWrite(kicker, 1);
   pinMode(trig_f, OUTPUT);
@@ -50,7 +54,7 @@ void loop() {
   //==========================================_____DEBUG_____===============================================
   if(state[2]){ //дебаг
     Serial.println("DEBUG:");
-    GyroUpdate();
+    //GyroUpdate();
     fullStop(8);
     dir = IRz();
     sp = sp_ref * (dir == 747);
@@ -113,6 +117,7 @@ void loop() {
       delay(500);
       runMotor(i, -150);
       delay(500);
+      Serial.println();
     }
   }
 }
@@ -196,8 +201,7 @@ int IRz() {               //определение зоны                     
 }
 
 int LINE(int angle) {      //проверяет не едем ли мы на линию                                                                        ПЕРЕДЕЛАТЬ
-  int zone = (int(angle + 360) / 90) % 4;
-  angle += 180 * (analogRead(zone) > line_ref or analogRead((zone+1) % 4) > line_ref);
+  angle += 180 * (1);
   return angle;
 }
 
