@@ -9,7 +9,7 @@
 bool error[] = {0,0,0}, state[] = {0,0,0}; //для кнопок предыидущее значение и текущее состояние
 const int sp_ref = 200, X_er = 2, line_ref = 400;                             //основная скорость, допуск гироскопа
 const int IRpins[] = {38, 36, 34,  32, 30, 28,  26, 24, 46,  44, 42, 23,  25, 27, 40};
-const int M[] = {325, 35, 35, 325};
+int M[] = {325, 35, 35, 325};
 int model = 0, kicker = 3, echo_f = 2, trig_f = 4;
 long X;                                    //для гироскопа
 
@@ -37,6 +37,10 @@ void setup() {
   digitalWrite(kicker, 1);
   pinMode(trig_f, OUTPUT);
   pinMode(echo_f, INPUT);
+  if(!model) {
+    M[2] = 325;
+    M[3] = 35;
+  }
 } 
 
 
@@ -53,7 +57,7 @@ void loop() {
     GyroUpdate();
     fullStop(8);
     dir = IRz();
-    sp = sp_ref * (dir == 747);
+    sp = sp_ref * (dir != 747);
     left = getUS(0);
     right = getUS(1);
     if(getUS(2) < 8 and dir == 0) { //если мяч перед роботом, то
@@ -81,7 +85,7 @@ void loop() {
   if(state[1]){   //рабочий режим: первая кнопка - нападающий; вторая кнопка - вратарь
     Serial.println("FORWARD");
     dir = IRz();
-    sp = sp_ref * (dir == 747);
+    sp = sp_ref * (dir != 747);
     right = getUS(1);
     left = getUS(0);
     //if(((left < 50) or (right < 50)) and ((left + right) > 165)) sp -= 50; //если на одном из датчиков <50 и сумма датчиков >165, то едем медленнее
@@ -101,7 +105,7 @@ void loop() {
     }    */
     Serial.print("\tsp=");
     Serial.print(sp);
-    GoToZone(0, 200);
+    GoToZone(dir, sp);
     Serial.println();
   }
 
@@ -174,22 +178,27 @@ bool GyroUpdate() //обновление значения гироскопа    
 }
 
 int IRz() {               //определение зоны                                                                                       ПРОВЕРИТЬ
-  int max_val = 0;
-  int max_sens = -1;
-  for(int i = 0; i < 15; i++){
-    int val = pulseIn(IRpins[i], LOW, 2000);
-    if(val > max_val){
-      max_sens = i;
-      max_val = val;
+  int max_sens = -1, max_val;      //сумма больших зон
+  int i_er[] = {-1, -1, -1};  //номера уже найденых зон
+  for(int j=0; j < 3; j++){
+    max_val = 0;      // максимальное значение в цикле
+    for(int i = 0; i < 15; i++){
+      int val;
+      if(i != i_er[0] and i != i_er[1]) val = pulseIn(IRpins[i], LOW, 2000);
+      else continue;
+      if(val > max_val){
+        i_er[j] = i;
+        max_val = val;
+      }
     }
   }
   Serial.print("\tIRzone:");
-  Serial.print(max_sens);
+  Serial.print(max_val);
   Serial.print('(');
-  int angle = (max_sens * 24) * bool(max_val) + 747 * !bool(max_val);
+  int angle = (i_er[0] + i_er[1] + i_er[2])*24 / 3 * bool(max_val) + 699 * !bool(max_val);   //вычисляем угол мяча
   Serial.print(angle);
   Serial.print("-->");
-  angle += bool(angle) * 48 * (1 - (2 * int(max_sens / 8)));
+  angle += bool(angle) * 24 * (1 - (2 * int(max_sens / 8)));     // добавляем поправку
   Serial.print(angle);
   Serial.print(')');
   return angle;
